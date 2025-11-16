@@ -1,0 +1,23 @@
+repos:
+      - repo: https://github.com/astral-sh/ruff-pre-commit
+        rev: v0.14.5
+        hooks:
+          # Fix import sort order.
+          - id: ruff-check
+            args: [ --select=I, --fix ]
+            fail_fast: true
+          # Check everything else.
+          - id: ruff-check
+            fail_fast: true
+          # Format.
+          - id: ruff-format
+            fail_fast: true
+      - repo: local
+        hooks:
+          # Run unit tests.
+          - id: pytest
+            name: pytest
+            entry: pytest
+            language: system
+            pass_filenames: false
+            always_run: true
