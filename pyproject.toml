@@ -3,8 +3,26 @@ name = "automated-cover-control"
 version = "0.1.0"
 description = "Automated cover control for Home Assistant"
 requires-python = ">=3.13"
+license = "Apache-2.0"
+license-files = ["COPYING"]
 authors = [
     { name = "Tarick Bedeir", email = "tarick@bedeir.com" }
+]
+dependencies = [
+    "homeassistant",
+    "pandas",
+]
+
+[project.optional-dependencies]
+test = [
+    "PyTurboJPEG",
+    "hassil",
+    "home-assistant-intents",
+    "mutagen",
+    "pytest",
+    "pytest-cov",
+    "pytest-homeassistant-custom-component",
+    "time_machine",
 ]
 
 [project.urls]
