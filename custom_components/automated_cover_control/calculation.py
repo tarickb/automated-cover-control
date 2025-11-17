@@ -84,10 +84,11 @@ def calculate_sun_tracking_vertical_cover_position(
         return within_range
 
     def _is_sun_in_front_of_window() -> bool:
-        azi_min = min(window_config.fov_left, 90)
-        azi_max = min(window_config.fov_right, 90)
-
-        in_front_of_window = _gamma() < azi_min and _gamma() > -azi_max and _is_solar_elevation_within_range()
+        in_front_of_window = (
+            _gamma() < window_config.fov_left
+            and _gamma() > -window_config.fov_right
+            and _is_solar_elevation_within_range()
+        )
         logger.debug("[_is_sun_in_front_of_window] %s", in_front_of_window)
         return in_front_of_window
 
