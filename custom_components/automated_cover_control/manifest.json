@@ -1,0 +1,18 @@
+{
+  "domain": "automated_cover_control",
+  "name": "Automated Cover Control",
+  "codeowners": ["@tarickb"],
+  "config_flow": true,
+  "dependencies": [
+    "sun",
+    "device_tracker",
+    "zone",
+    "sensor",
+    "weather"
+  ],
+  "documentation": "https://github.com/tarickb/automated-cover-control",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/tarickb/automated-cover-control/issues",
+  "requirements": ["astral", "pandas"],
+  "version": "0.0.1"
+}
