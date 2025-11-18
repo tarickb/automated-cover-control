@@ -25,6 +25,7 @@ from .const import (
     CONF_MANUAL_OVERRIDE_DETECTION_THRESHOLD,
     CONF_MANUAL_OVERRIDE_DURATION,
     CONF_MANUAL_OVERRIDE_IGNORE_INTERMEDIATE_POSITIONS,
+    CONF_MANUAL_OVERRIDE_IGNORE_NON_USER_TRIGGERED_CHANGES,
     CONF_MANUAL_OVERRIDE_RESET_TIMER_AT_EACH_ADJUSTMENT,
     CONF_MAX_SOLAR_ELEVATION,
     CONF_MAXIMUM_COVER_POSITION,
@@ -60,6 +61,7 @@ class ManualOverrideConfiguration:
     reset_timer_at_each_adjustment: bool = False
     override_duration: timedelta = None
     ignore_intermediate_positions: bool = True
+    ignore_non_user_triggered_changes: bool = False
     detection_threshold: int = None
 
     def read(self, config: MappingProxyType[str, Any]) -> None:
@@ -68,6 +70,9 @@ class ManualOverrideConfiguration:
             **_config_option_or_default(config, CONF_MANUAL_OVERRIDE_DURATION, {"minutes": 15})
         )
         self.ignore_intermediate_positions = config.get(CONF_MANUAL_OVERRIDE_IGNORE_INTERMEDIATE_POSITIONS, True)
+        self.ignore_non_user_triggered_changes = config.get(
+            CONF_MANUAL_OVERRIDE_IGNORE_NON_USER_TRIGGERED_CHANGES, False
+        )
         self.detection_threshold = _config_option_or_default(config, CONF_MANUAL_OVERRIDE_DETECTION_THRESHOLD, 2)
         if self.detection_threshold < 2:
             self.detection_threshold = 2

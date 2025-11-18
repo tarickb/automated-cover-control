@@ -487,12 +487,6 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
                 event.data["entity_id"],
             )  # pragma: no cover
             return  # pragma: no cover
-        if self._manual_overrides.should_ignore_state_change(event.data["new_state"]):
-            self._logger.debug(
-                "[async_cover_entity_state_change] Ignoring state change for %s",
-                event.data["entity_id"],
-            )
-            return
         in_motion_target = self._cover_entities_in_motion.get(event.data["entity_id"], None)
         if in_motion_target is not None:
             position = event.data["new_state"].attributes.get("current_position")
@@ -511,6 +505,12 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
                     position,
                 )
             # Nothing to do here.
+            return
+        if self._manual_overrides.should_ignore_state_change(event.data["new_state"]):
+            self._logger.debug(
+                "[async_cover_entity_state_change] Ignoring state change for %s",
+                event.data["entity_id"],
+            )
             return
         self._logger.debug(
             "[async_cover_entity_state_change] Not expecting cover %s to be in motion",

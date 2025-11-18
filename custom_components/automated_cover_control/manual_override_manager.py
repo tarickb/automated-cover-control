@@ -47,10 +47,18 @@ class ManualOverrideManager:
         self._override_expiry = {}
 
     def should_ignore_state_change(self, new_state: State) -> bool:
-        return self._config.ignore_intermediate_positions and new_state.state in [
+        if self._config.ignore_intermediate_positions and new_state.state in [
             "opening",
             "closing",
-        ]
+        ]:
+            return True
+        self._logger.debug(
+            "[ManualOverrideManager.should_ignore_state_change] context: %s", new_state.context.as_dict()
+        )
+        if self._config.ignore_non_user_triggered_changes and not new_state.context.user_id:
+            self._logger.debug("[ManualOverrideManager.should_ignore_state_change] ignoring non-user-triggered change")
+            return True
+        return False
 
     def get_config(self) -> ManualOverrideConfiguration:
         return self._config
