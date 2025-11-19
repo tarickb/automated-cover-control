@@ -29,6 +29,8 @@ test = [
 github = "https://github.com/tarickb/automated-cover-control.git"
 
 [tool.pytest.ini_options]
+log_file = "pytest_debug.log"
+log_file_level = "INFO"
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

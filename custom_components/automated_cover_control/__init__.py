@@ -11,6 +11,7 @@ from homeassistant.helpers.event import (
 
 from .const import DOMAIN
 from .coordinator import AutomatedCoverControlDataUpdateCoordinator
+from .log_context_adapter import LogContextAdapter
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.BINARY_SENSOR, Platform.BUTTON]
 
@@ -29,9 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     dependencies = coordinator.get_dependencies()
     cover_entities = coordinator.get_cover_entities()
 
-    logging.getLogger(__name__).debug("Setting up entry %s", entry.data.get("name"))
-    logging.getLogger(__name__).debug("Dependencies for %s: %s", entry.data.get("name"), dependencies)
-    logging.getLogger(__name__).debug("Covers for %s: %s", entry.data.get("name"), cover_entities)
+    logger = LogContextAdapter(logging.getLogger(__name__))
+    logger.set_config_name(entry.data.get("name"))
+    logger.info("Dependencies: %s", dependencies)
+    logger.info("Covers: %s", cover_entities)
 
     entry.async_on_unload(
         async_track_state_change_event(

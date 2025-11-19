@@ -1,11 +1,13 @@
 import logging
 from datetime import datetime, timedelta
 
-from homeassistant.core import State
+from homeassistant.core import Context, State
 
 from custom_components.automated_cover_control.config import (
     CONF_MANUAL_OVERRIDE_DETECTION_THRESHOLD,
     CONF_MANUAL_OVERRIDE_DURATION,
+    CONF_MANUAL_OVERRIDE_IGNORE_INTERMEDIATE_POSITIONS,
+    CONF_MANUAL_OVERRIDE_IGNORE_NON_USER_TRIGGERED_CHANGES,
     CONF_MANUAL_OVERRIDE_RESET_TIMER_AT_EACH_ADJUSTMENT,
 )
 from custom_components.automated_cover_control.log_context_adapter import (
@@ -225,3 +227,68 @@ def test_manual_overrides_rearm_enabled():
 
     manager.reset_expired_overrides(now=first_event_time + timedelta(minutes=91))
     assert len(manager.covers_under_manual_control()) == 0
+
+
+def test_manual_overrides_ignored_events():
+    logger = LogContextAdapter(logging.getLogger(__name__))
+    manager = ManualOverrideManager(logger)
+
+    manager.update_config({CONF_MANUAL_OVERRIDE_IGNORE_INTERMEDIATE_POSITIONS: False})
+    assert not manager.should_ignore_state_change(
+        State(
+            entity_id="cover.foo",
+            state="opening",
+            last_updated=datetime.now(),
+            attributes={"current_position": 22},
+        )
+    )
+
+    manager.update_config({CONF_MANUAL_OVERRIDE_IGNORE_INTERMEDIATE_POSITIONS: True})
+    assert manager.should_ignore_state_change(
+        State(
+            entity_id="cover.foo",
+            state="opening",
+            last_updated=datetime.now(),
+            attributes={"current_position": 22},
+        )
+    )
+
+    manager.update_config({CONF_MANUAL_OVERRIDE_IGNORE_NON_USER_TRIGGERED_CHANGES: False})
+    assert not manager.should_ignore_state_change(
+        State(
+            entity_id="cover.foo",
+            state="unknown",
+            last_updated=datetime.now(),
+            attributes={"current_position": 22},
+            context=Context(),
+        )
+    )
+    assert not manager.should_ignore_state_change(
+        State(
+            entity_id="cover.foo",
+            state="unknown",
+            last_updated=datetime.now(),
+            attributes={"current_position": 22},
+            context=Context(user_id="xyz"),
+        )
+    )
+
+    manager.update_config({CONF_MANUAL_OVERRIDE_IGNORE_NON_USER_TRIGGERED_CHANGES: True})
+    assert manager.should_ignore_state_change(
+        State(
+            entity_id="cover.foo",
+            state="unknown",
+            last_updated=datetime.now(),
+            attributes={"current_position": 22},
+            context=Context(),
+        )
+    )
+    assert not manager.should_ignore_state_change(
+        State(
+            entity_id="cover.foo",
+            state="unknown",
+            last_updated=datetime.now(),
+            attributes={"current_position": 22},
+            context=Context(user_id="xyz"),
+        )
+    )
