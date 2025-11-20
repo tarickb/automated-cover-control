@@ -47,7 +47,6 @@ from .why import CoverControlReason, CoverControlTweaks
 @dataclass
 class CoverStateChangeData:
     entity_id: str
-    old_state: State | None
     new_state: State | None
 
 
@@ -471,11 +470,9 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
     async def async_cover_entity_state_change(self, event: Event[EventStateChangedData]) -> None:
         self._logger.debug("[async_cover_entity_state_change] Cover entity state change: %s", event)
         if event.data["old_state"] is None:
-            self._logger.debug("[async_cover_entity_state_change] Old state is none, nothing to do")  # pragma: no cover
-            return  # pragma: no cover
-        if not event.data["old_state"].attributes.get("current_position"):
-            self._logger.debug("[async_cover_entity_state_change] Old position is unknown, not processing")
-            return
+            self._logger.debug("[async_cover_entity_state_change] Old state is none.")  # pragma: no cover
+        elif "current_position" not in event.data["old_state"].attributes:
+            self._logger.debug("[async_cover_entity_state_change] Old position is unknown.")
         self._logger.debug(
             "[async_cover_entity_state_change] Processing state change event for %s: %s",
             event.data["entity_id"],
@@ -516,9 +513,7 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
             "[async_cover_entity_state_change] Not expecting cover %s to be in motion",
             event.data["entity_id"],
         )
-        self._cover_state_change_data = CoverStateChangeData(
-            event.data["entity_id"], event.data["old_state"], event.data["new_state"]
-        )
+        self._cover_state_change_data = CoverStateChangeData(event.data["entity_id"], event.data["new_state"])
         self._async_refresh_requests.cover_state_change = True
         await self.async_refresh()
 
