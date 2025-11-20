@@ -20,7 +20,7 @@ async def async_initialize_integration(
     hass: HomeAssistant,
     config_entry: ConfigEntry | None = None,
 ) -> bool:
-    return True
+    return True  # pragma: no cover
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

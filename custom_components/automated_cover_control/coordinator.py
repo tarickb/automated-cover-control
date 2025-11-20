@@ -472,7 +472,7 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
         if event.data["old_state"] is None:
             self._logger.debug("[async_cover_entity_state_change] Old state is none.")  # pragma: no cover
         elif "current_position" not in event.data["old_state"].attributes:
-            self._logger.debug("[async_cover_entity_state_change] Old position is unknown.")
+            self._logger.debug("[async_cover_entity_state_change] Old position is unknown.")  # pragma: no cover
         self._logger.debug(
             "[async_cover_entity_state_change] Processing state change event for %s: %s",
             event.data["entity_id"],

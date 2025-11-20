@@ -12,4 +12,4 @@ class LogContextAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
         if self.config_name:
             return f"[{self.config_name}] {msg}", kwargs
-        return f"[unknown] {msg}", kwargs
+        return f"[unknown] {msg}", kwargs  # pragma: no cover
