@@ -26,10 +26,9 @@ OPTIONS = {
 }
 
 
-async def test_button(hass: HomeAssistant):
+async def test_button(hass: HomeAssistant, return_fake_cover_data):
     with patch.multiple(
         "custom_components.automated_cover_control.coordinator.AutomatedCoverControlDataUpdateCoordinator",
-        _async_update_data=DEFAULT,
         async_reset_manual_override=DEFAULT,
     ) as mocks:
         entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS)
@@ -51,10 +50,9 @@ async def test_button(hass: HomeAssistant):
         mocks["async_reset_manual_override"].assert_called_once()
 
 
-async def test_button_with_no_covers(hass: HomeAssistant):
+async def test_button_with_no_covers(hass: HomeAssistant, return_fake_cover_data):
     with patch.multiple(
         "custom_components.automated_cover_control.coordinator.AutomatedCoverControlDataUpdateCoordinator",
-        _async_update_data=DEFAULT,
         async_reset_manual_override=DEFAULT,
     ):
         entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS | {CONF_ENTITIES: []})

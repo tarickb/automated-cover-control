@@ -1,6 +1,3 @@
-from datetime import datetime
-from unittest.mock import patch
-
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -13,14 +10,6 @@ from custom_components.automated_cover_control.const import (
     CONF_WINDOW_HEIGHT,
     DOMAIN,
 )
-from custom_components.automated_cover_control.coordinator import (
-    AutomatedCoverControlData,
-    AutomatedCoverControlDataUpdateCoordinator,
-)
-from custom_components.automated_cover_control.why import (
-    CoverControlReason,
-    CoverControlTweaks,
-)
 
 OPTIONS = {
     CONF_DEFAULT_COVER_POSITION: 100.0,
@@ -32,28 +21,14 @@ OPTIONS = {
 }
 
 
-async def test_sensors(hass: HomeAssistant):
+async def test_sensors(hass: HomeAssistant, return_fake_cover_data):
     entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    with patch.object(AutomatedCoverControlDataUpdateCoordinator, "_async_update_data") as mock:
-        mock.return_value = AutomatedCoverControlData(
-            attributes={},
-            states={
-                "sun_in_window_start": datetime.fromisoformat("2025-01-01T00:00:01Z"),
-                "sun_in_window_end": datetime.fromisoformat("2025-01-01T23:59:59Z"),
-                "target_position": 66,
-                "reason": CoverControlReason.SUN_NOT_IN_FRONT_OF_WINDOW,
-                "tweaks": [CoverControlTweaks.AFTER_SUNSET_OR_BEFORE_SUNRISE],
-                "manual_override": None,
-                "covers_under_manual_control": [],
-                "sun_in_front_of_window": None,
-            },
-        )
-        await coordinator.async_refresh()
+    await coordinator.async_refresh()
 
     state = hass.states.get("sensor.foo_automated_cover_control_sun_in_window_start")
     assert state

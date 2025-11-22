@@ -23,7 +23,7 @@ async def async_setup_entry(
 ) -> None:
     coordinator: AutomatedCoverControlDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    if len(config_entry.options.get(CONF_ENTITIES)) < 1:
+    if CONF_ENTITIES not in config_entry.options or len(config_entry.options.get(CONF_ENTITIES)) < 1:
         return
 
     manual_switch = CoordinatorActionSwitch(

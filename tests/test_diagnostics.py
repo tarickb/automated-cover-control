@@ -25,7 +25,7 @@ OPTIONS = {
 }
 
 
-async def test_get_diagnostics(hass: HomeAssistant, hass_client: ClientSessionGenerator):
+async def test_get_diagnostics(hass: HomeAssistant, hass_client: ClientSessionGenerator, return_fake_cover_data):
     entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

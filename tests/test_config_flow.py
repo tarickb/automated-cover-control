@@ -49,7 +49,7 @@ from custom_components.automated_cover_control.const import (
 )
 
 
-async def test_option_flow_window(hass: HomeAssistant) -> None:
+async def test_option_flow_window(hass: HomeAssistant, return_fake_cover_data) -> None:
     options = {
         CONF_DEFAULT_COVER_POSITION: 100.0,
         CONF_DISTANCE_FROM_WINDOW: 0.1,
@@ -104,9 +104,10 @@ async def test_option_flow_window(hass: HomeAssistant) -> None:
         CONF_FOV_RIGHT: 90,
         CONF_BLIND_SPOT_ENABLED: False,
     }
+    await hass.async_block_till_done()
 
 
-async def test_option_flow_blind_spot(hass: HomeAssistant) -> None:
+async def test_option_flow_blind_spot(hass: HomeAssistant, return_fake_cover_data) -> None:
     options = {
         CONF_BLIND_SPOT_ENABLED: True,
         CONF_DEFAULT_COVER_POSITION: 100.0,
@@ -162,9 +163,10 @@ async def test_option_flow_blind_spot(hass: HomeAssistant) -> None:
         CONF_BLIND_SPOT_LEFT: 10.0,
         CONF_BLIND_SPOT_RIGHT: 20.0,
     }
+    await hass.async_block_till_done()
 
 
-async def test_option_flow_cover_position(hass: HomeAssistant) -> None:
+async def test_option_flow_cover_position(hass: HomeAssistant, return_fake_cover_data) -> None:
     options = {
         CONF_DEFAULT_COVER_POSITION: 70.0,
         CONF_MAXIMUM_COVER_POSITION: 80.0,
@@ -200,9 +202,10 @@ async def test_option_flow_cover_position(hass: HomeAssistant) -> None:
         CONF_ONLY_FORCE_MAXIMUM_WHEN_SUN_IN_FRONT_OF_WINDOW: False,
         CONF_ONLY_FORCE_MINIMUM_WHEN_SUN_IN_FRONT_OF_WINDOW: False,
     }
+    await hass.async_block_till_done()
 
 
-async def test_option_flow_sensor(hass: HomeAssistant) -> None:
+async def test_option_flow_sensor(hass: HomeAssistant, return_fake_cover_data) -> None:
     options = {
         CONF_PRESENCE_ENTITY: "binary_sensor.foo",
         CONF_WEATHER_ENTITY: "weather.foo",
@@ -247,9 +250,10 @@ async def test_option_flow_sensor(hass: HomeAssistant) -> None:
         CONF_LUX_THRESHOLD: 1000.0,
         CONF_WEATHER_STATE: ["sunny", "partlycloudy", "cloudy", "clear"],
     }
+    await hass.async_block_till_done()
 
 
-async def test_option_flow_automation(hass: HomeAssistant) -> None:
+async def test_option_flow_automation(hass: HomeAssistant, return_fake_cover_data) -> None:
     options = {
         CONF_SUNSET_OFFSET: {"minutes": 10},
         CONF_START_TIME_ENTITY: "input_datetime.foo",
@@ -287,9 +291,10 @@ async def test_option_flow_automation(hass: HomeAssistant) -> None:
         CONF_MINIMUM_CHANGE_PERCENTAGE: 1,
         CONF_MINIMUM_CHANGE_TIME: {"minutes": 2},
     }
+    await hass.async_block_till_done()
 
 
-async def test_option_flow_manual_override(hass: HomeAssistant) -> None:
+async def test_option_flow_manual_override(hass: HomeAssistant, return_fake_cover_data) -> None:
     options = {
         CONF_MANUAL_OVERRIDE_DURATION: {"hours": 5},
     }
@@ -320,9 +325,10 @@ async def test_option_flow_manual_override(hass: HomeAssistant) -> None:
         CONF_MANUAL_OVERRIDE_IGNORE_INTERMEDIATE_POSITIONS: False,
         CONF_MANUAL_OVERRIDE_IGNORE_NON_USER_TRIGGERED_CHANGES: False,
     }
+    await hass.async_block_till_done()
 
 
-async def test_initial_config_flow(hass: HomeAssistant) -> None:
+async def test_initial_config_flow(hass: HomeAssistant, return_fake_cover_data) -> None:
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -421,7 +427,7 @@ async def test_initial_config_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_initial_config_flow_with_blind_spot(hass: HomeAssistant) -> None:
+async def test_initial_config_flow_with_blind_spot(hass: HomeAssistant, return_fake_cover_data) -> None:
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"

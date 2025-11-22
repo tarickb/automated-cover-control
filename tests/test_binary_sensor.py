@@ -39,16 +39,17 @@ STATES_TEMPLATE = {
 
 
 async def test_sun_in_front_of_window_sensor(hass: HomeAssistant):
-    entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS)
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     with patch.object(AutomatedCoverControlDataUpdateCoordinator, "_async_update_data") as mock:
         mock.return_value = AutomatedCoverControlData(
             attributes={}, states=dict(STATES_TEMPLATE, sun_in_front_of_window=False)
         )
+
+        entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        coordinator = hass.data[DOMAIN][entry.entry_id]
+
         await coordinator.async_refresh()
 
         state = hass.states.get("binary_sensor.foo_automated_cover_control_sun_in_front_of_window")
@@ -66,16 +67,17 @@ async def test_sun_in_front_of_window_sensor(hass: HomeAssistant):
 
 
 async def test_manual_override_detected_sensor(hass: HomeAssistant):
-    entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS)
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     with patch.object(AutomatedCoverControlDataUpdateCoordinator, "_async_update_data") as mock:
         mock.return_value = AutomatedCoverControlData(
             attributes={}, states=dict(STATES_TEMPLATE, manual_override=False)
         )
+
+        entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        coordinator = hass.data[DOMAIN][entry.entry_id]
+
         await coordinator.async_refresh()
 
         state = hass.states.get("binary_sensor.foo_automated_cover_control_manual_override_detected")

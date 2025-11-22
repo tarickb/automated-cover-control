@@ -1,4 +1,3 @@
-from datetime import datetime
 from unittest.mock import DEFAULT, patch
 
 from homeassistant.components.switch import (
@@ -24,13 +23,6 @@ from custom_components.automated_cover_control.const import (
     CONF_WINDOW_HEIGHT,
     DOMAIN,
 )
-from custom_components.automated_cover_control.coordinator import (
-    AutomatedCoverControlData,
-)
-from custom_components.automated_cover_control.why import (
-    CoverControlReason,
-    CoverControlTweaks,
-)
 
 OPTIONS = {
     CONF_DEFAULT_COVER_POSITION: 100.0,
@@ -42,27 +34,12 @@ OPTIONS = {
 }
 
 
-async def test_manual_override_switch(hass: HomeAssistant):
+async def test_manual_override_switch(hass: HomeAssistant, return_fake_cover_data):
     with patch.multiple(
         "custom_components.automated_cover_control.coordinator.AutomatedCoverControlDataUpdateCoordinator",
-        _async_update_data=DEFAULT,
         async_enable_detection_of_manual_override=DEFAULT,
         async_disable_detection_of_manual_override=DEFAULT,
     ) as mocks:
-        mocks["_async_update_data"].return_value = AutomatedCoverControlData(
-            attributes={},
-            states={
-                "sun_in_window_start": datetime.fromisoformat("2025-01-01T00:00:01Z"),
-                "sun_in_window_end": datetime.fromisoformat("2025-01-01T23:59:59Z"),
-                "target_position": 66,
-                "reason": CoverControlReason.SUN_NOT_IN_FRONT_OF_WINDOW,
-                "tweaks": [CoverControlTweaks.AFTER_SUNSET_OR_BEFORE_SUNRISE],
-                "manual_override": None,
-                "covers_under_manual_control": [],
-                "sun_in_front_of_window": None,
-            },
-        )
-
         entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -92,27 +69,12 @@ async def test_manual_override_switch(hass: HomeAssistant):
         mocks["async_enable_detection_of_manual_override"].assert_called()
 
 
-async def test_control_switch(hass: HomeAssistant):
+async def test_control_switch(hass: HomeAssistant, return_fake_cover_data):
     with patch.multiple(
         "custom_components.automated_cover_control.coordinator.AutomatedCoverControlDataUpdateCoordinator",
-        _async_update_data=DEFAULT,
         async_enable_automated_control=DEFAULT,
         async_disable_automated_control=DEFAULT,
     ) as mocks:
-        mocks["_async_update_data"].return_value = AutomatedCoverControlData(
-            attributes={},
-            states={
-                "sun_in_window_start": datetime.fromisoformat("2025-01-01T00:00:01Z"),
-                "sun_in_window_end": datetime.fromisoformat("2025-01-01T23:59:59Z"),
-                "target_position": 66,
-                "reason": CoverControlReason.SUN_NOT_IN_FRONT_OF_WINDOW,
-                "tweaks": [CoverControlTweaks.AFTER_SUNSET_OR_BEFORE_SUNRISE],
-                "manual_override": None,
-                "covers_under_manual_control": [],
-                "sun_in_front_of_window": None,
-            },
-        )
-
         entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -142,27 +104,12 @@ async def test_control_switch(hass: HomeAssistant):
         mocks["async_enable_automated_control"].assert_called()
 
 
-async def test_control_switch_no_covers(hass: HomeAssistant):
+async def test_control_switch_no_covers(hass: HomeAssistant, return_fake_cover_data):
     with patch.multiple(
         "custom_components.automated_cover_control.coordinator.AutomatedCoverControlDataUpdateCoordinator",
-        _async_update_data=DEFAULT,
         async_enable_automated_control=DEFAULT,
         async_disable_automated_control=DEFAULT,
-    ) as mocks:
-        mocks["_async_update_data"].return_value = AutomatedCoverControlData(
-            attributes={},
-            states={
-                "sun_in_window_start": datetime.fromisoformat("2025-01-01T00:00:01Z"),
-                "sun_in_window_end": datetime.fromisoformat("2025-01-01T23:59:59Z"),
-                "target_position": 66,
-                "reason": CoverControlReason.SUN_NOT_IN_FRONT_OF_WINDOW,
-                "tweaks": [CoverControlTweaks.AFTER_SUNSET_OR_BEFORE_SUNRISE],
-                "manual_override": None,
-                "covers_under_manual_control": [],
-                "sun_in_front_of_window": None,
-            },
-        )
-
+    ):
         entry = MockConfigEntry(domain=DOMAIN, data={"name": "foo"}, options=OPTIONS | {CONF_ENTITIES: []})
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -172,26 +119,12 @@ async def test_control_switch_no_covers(hass: HomeAssistant):
         assert state is None
 
 
-async def test_control_switch_last_state_on(hass: HomeAssistant):
+async def test_control_switch_last_state_on(hass: HomeAssistant, return_fake_cover_data):
     with patch.multiple(
         "custom_components.automated_cover_control.coordinator.AutomatedCoverControlDataUpdateCoordinator",
-        _async_update_data=DEFAULT,
         async_enable_automated_control=DEFAULT,
         async_disable_automated_control=DEFAULT,
     ) as mocks:
-        mocks["_async_update_data"].return_value = AutomatedCoverControlData(
-            attributes={},
-            states={
-                "sun_in_window_start": datetime.fromisoformat("2025-01-01T00:00:01Z"),
-                "sun_in_window_end": datetime.fromisoformat("2025-01-01T23:59:59Z"),
-                "target_position": 66,
-                "reason": CoverControlReason.SUN_NOT_IN_FRONT_OF_WINDOW,
-                "tweaks": [CoverControlTweaks.AFTER_SUNSET_OR_BEFORE_SUNRISE],
-                "manual_override": None,
-                "covers_under_manual_control": [],
-                "sun_in_front_of_window": None,
-            },
-        )
         mock_restore_cache(
             hass,
             (
@@ -215,26 +148,12 @@ async def test_control_switch_last_state_on(hass: HomeAssistant):
         mocks["async_enable_automated_control"].assert_called()
 
 
-async def test_control_switch_last_state_off(hass: HomeAssistant):
+async def test_control_switch_last_state_off(hass: HomeAssistant, return_fake_cover_data):
     with patch.multiple(
         "custom_components.automated_cover_control.coordinator.AutomatedCoverControlDataUpdateCoordinator",
-        _async_update_data=DEFAULT,
         async_enable_automated_control=DEFAULT,
         async_disable_automated_control=DEFAULT,
     ) as mocks:
-        mocks["_async_update_data"].return_value = AutomatedCoverControlData(
-            attributes={},
-            states={
-                "sun_in_window_start": datetime.fromisoformat("2025-01-01T00:00:01Z"),
-                "sun_in_window_end": datetime.fromisoformat("2025-01-01T23:59:59Z"),
-                "target_position": 66,
-                "reason": CoverControlReason.SUN_NOT_IN_FRONT_OF_WINDOW,
-                "tweaks": [CoverControlTweaks.AFTER_SUNSET_OR_BEFORE_SUNRISE],
-                "manual_override": None,
-                "covers_under_manual_control": [],
-                "sun_in_front_of_window": None,
-            },
-        )
         mock_restore_cache(
             hass,
             (
