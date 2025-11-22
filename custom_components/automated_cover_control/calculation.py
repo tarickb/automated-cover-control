@@ -19,9 +19,9 @@ from .why import CoverControlReason, CoverControlTweaks
 class SunPosition:
     solar_azimuth: float = 0.0
     solar_elevation: float = 0.0
-    sunrise: datetime = None
-    sunset: datetime = None
-    now: datetime = None  # for testing, uses now if None
+    sunrise: datetime = datetime.min.replace(tzinfo=UTC)
+    sunset: datetime = datetime.min.replace(tzinfo=UTC)
+    now: datetime | None = None  # for testing, uses now if None
 
 
 @dataclass
@@ -69,9 +69,9 @@ def calculate_sun_tracking_vertical_cover_position(
         if window_config.min_solar_elevation is None and window_config.max_solar_elevation is None:
             within_range = sun_position.solar_elevation >= 0
         elif window_config.min_solar_elevation is None:
-            within_range = sun_position.solar_elevation <= window_config.max_solar_elevation
+            within_range = sun_position.solar_elevation <= (window_config.max_solar_elevation or 0)
         elif window_config.max_solar_elevation is None:
-            within_range = sun_position.solar_elevation >= window_config.min_solar_elevation
+            within_range = sun_position.solar_elevation >= (window_config.min_solar_elevation or 0)
         else:
             within_range = (
                 window_config.min_solar_elevation <= sun_position.solar_elevation <= window_config.max_solar_elevation
@@ -99,6 +99,9 @@ def calculate_sun_tracking_vertical_cover_position(
         sunrise_offset = automation_config.sunrise_offset
         if sunrise_offset is None:
             sunrise_offset = timedelta(seconds=0)
+
+        if sun_position.now is None:
+            raise Exception("now unknown")
 
         after_sunset = sun_position.now > (sun_position.sunset + sunset_offset)
         before_sunrise = sun_position.now < (sun_position.sunrise - sunrise_offset)
@@ -214,7 +217,7 @@ def calculate_sun_tracking_vertical_cover_position(
         )
         return percentage
 
-    def _get_target_position_unclipped() -> (int, CoverControlReason):
+    def _get_target_position_unclipped() -> tuple[float, CoverControlReason]:
         if _is_window_open():
             logger.debug("[_get_target_position_unclipped] Window open, using default")
             return _default_position(), CoverControlReason.WINDOW_OPEN
@@ -261,9 +264,9 @@ def calculate_sun_tracking_vertical_cover_position(
 
     if sun_position.now.tzinfo is None:
         raise Exception(f"now ({sun_position.now}) lacks timezone")
-    if sun_position.sunrise.tzinfo is None:
+    if sun_position.sunrise is not None and sun_position.sunrise.tzinfo is None:
         raise Exception(f"sunrise ({sun_position.sunrise}) lacks timezone")
-    if sun_position.sunset.tzinfo is None:
+    if sun_position.sunset is not None and sun_position.sunset.tzinfo is None:
         raise Exception(f"sunset ({sun_position.sunset}) lacks timezone")
 
     result, reason = _get_target_position_unclipped()
@@ -278,19 +281,19 @@ def calculate_sun_tracking_vertical_cover_position(
     if _is_after_sunset_or_before_sunrise():
         tweaks.append(CoverControlTweaks.AFTER_SUNSET_OR_BEFORE_SUNRISE)
 
-    if _should_apply_max_position() and result > automation_config.maximum_cover_position:
+    if _should_apply_max_position() and result > (automation_config.maximum_cover_position or 0):
         logger.debug(
             "[get_target_position] state above max, clipping to %s",
             automation_config.maximum_cover_position,
         )
-        result = round(automation_config.maximum_cover_position)
+        result = round(automation_config.maximum_cover_position or 0)
         tweaks.append(CoverControlTweaks.CLIPPED_TO_MAX)
-    if _should_apply_min_position() and result < automation_config.minimum_cover_position:
+    if _should_apply_min_position() and result < (automation_config.minimum_cover_position or 0):
         logger.debug(
             "[get_target_position] state below min, clipping to %s",
             automation_config.minimum_cover_position,
         )
-        result = round(automation_config.minimum_cover_position)
+        result = round(automation_config.minimum_cover_position or 0)
         tweaks.append(CoverControlTweaks.CLIPPED_TO_MIN)
 
     if clip(result, 0, 100) != result:

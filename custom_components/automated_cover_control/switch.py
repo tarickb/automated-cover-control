@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
@@ -23,7 +23,7 @@ async def async_setup_entry(
 ) -> None:
     coordinator: AutomatedCoverControlDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    if CONF_ENTITIES not in config_entry.options or len(config_entry.options.get(CONF_ENTITIES)) < 1:
+    if len(config_entry.options.get(CONF_ENTITIES) or []) < 1:
         return
 
     manual_switch = CoordinatorActionSwitch(
@@ -69,8 +69,10 @@ class CoordinatorActionSwitch(
         initial_state: bool,
         coordinator: AutomatedCoverControlDataUpdateCoordinator,
         device_class: SwitchDeviceClass | None = None,
-        on_turned_on: Callable[[AutomatedCoverControlDataUpdateCoordinator, bool], bool] | None = None,
-        on_turned_off: Callable[[AutomatedCoverControlDataUpdateCoordinator, bool], bool] | None = None,
+        on_turned_on: Callable[[AutomatedCoverControlDataUpdateCoordinator, bool], Coroutine[Any, Any, bool]]
+        | None = None,
+        on_turned_off: Callable[[AutomatedCoverControlDataUpdateCoordinator, bool], Coroutine[Any, Any, bool]]
+        | None = None,
     ) -> None:
         super().__init__(coordinator=coordinator)
 
@@ -98,7 +100,7 @@ class CoordinatorActionSwitch(
     async def async_turn_on(self, **kwargs: Any) -> None:
         self._attr_is_on = True
         if self._on_turned_on is not None and await self._on_turned_on(
-            self.coordinator, kwargs.get("on_added_to_hass")
+            self.coordinator, kwargs.get("on_added_to_hass") or False
         ):
             await self.coordinator.async_refresh()
         self.schedule_update_ha_state()
@@ -106,7 +108,7 @@ class CoordinatorActionSwitch(
     async def async_turn_off(self, **kwargs: Any) -> None:
         self._attr_is_on = False
         if self._on_turned_off is not None and await self._on_turned_off(
-            self.coordinator, kwargs.get("on_added_to_hass")
+            self.coordinator, kwargs.get("on_added_to_hass") or False
         ):
             await self.coordinator.async_refresh()
         self.schedule_update_ha_state()

@@ -59,10 +59,10 @@ def _config_option_or_default(config: MappingProxyType[str, Any], key: str, defa
 @dataclass
 class ManualOverrideConfiguration:
     reset_timer_at_each_adjustment: bool = False
-    override_duration: timedelta = None
+    override_duration: timedelta | None = None
     ignore_intermediate_positions: bool = True
     ignore_non_user_triggered_changes: bool = False
-    detection_threshold: int = None
+    detection_threshold: int | None = None
 
     def read(self, config: MappingProxyType[str, Any]) -> None:
         self.reset_timer_at_each_adjustment = config.get(CONF_MANUAL_OVERRIDE_RESET_TIMER_AT_EACH_ADJUSTMENT, False)
@@ -92,15 +92,15 @@ class AutomationConfiguration:
     minimum_change_time: timedelta = timedelta(minutes=2)
 
     start_time: time | None = None
-    start_time_entity: str = None
+    start_time_entity: str | None = None
     end_time: time | None = None
-    end_time_entity: str = None
+    end_time_entity: str | None = None
 
-    sunrise_offset: timedelta = None
-    sunset_offset: timedelta = None
+    sunrise_offset: timedelta | None = None
+    sunset_offset: timedelta | None = None
 
-    minimum_cover_position: int = None
-    maximum_cover_position: int = None
+    minimum_cover_position: int | None = None
+    maximum_cover_position: int | None = None
     only_force_minimum_when_sun_in_front_of_window: bool = False
     only_force_maximum_when_sun_in_front_of_window: bool = False
 
@@ -144,9 +144,9 @@ class AutomationConfiguration:
 class BlindSpotConfiguration:
     enabled: bool = False
     # Left, right specified as angles between 0 and 180, anchored on the plane of the window.
-    left: int = None
-    right: int = None
-    elevation: int = None
+    left: int | None = None
+    right: int | None = None
+    elevation: int | None = None
 
     def read(self, config: MappingProxyType[str, Any]) -> None:
         self.enabled = config.get(CONF_BLIND_SPOT_ENABLED, False)
@@ -157,12 +157,12 @@ class BlindSpotConfiguration:
 
 @dataclass
 class SensorConfiguration:
-    presence_entity: str = None
-    window_sensor_entity: str = None
-    weather_entity: str = None
-    weather_condition: list[str] = field(default_factory=list)
-    lux_entity: str = None
-    lux_threshold: int = None
+    presence_entity: str | None = None
+    window_sensor_entity: str | None = None
+    weather_entity: str | None = None
+    weather_condition: list[str] | None = field(default_factory=list)
+    lux_entity: str | None = None
+    lux_threshold: int | None = None
 
     def read(self, config: MappingProxyType[str, Any]) -> None:
         self.presence_entity = config.get(CONF_PRESENCE_ENTITY)
@@ -180,8 +180,8 @@ class WindowConfiguration:
     distance_from_window: float = 0.0
     fov_left: int = 90
     fov_right: int = 90
-    min_solar_elevation: int = None
-    max_solar_elevation: int = None
+    min_solar_elevation: int | None = None
+    max_solar_elevation: int | None = None
 
     def read(self, config: MappingProxyType[str, Any]) -> None:
         self.window_azimuth = config.get(CONF_WINDOW_AZIMUTH, 0)

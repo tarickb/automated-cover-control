@@ -1,5 +1,5 @@
 import types
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from homeassistant.core import State
@@ -22,7 +22,7 @@ class ManualOverrideManager:
 
     def _mark_manual_control(self, entity_id: str, last_updated: datetime):
         if entity_id not in self._override_expiry or self._config.reset_timer_at_each_adjustment:
-            self._override_expiry[entity_id] = last_updated + self._config.override_duration
+            self._override_expiry[entity_id] = last_updated + (self._config.override_duration or timedelta())
             self._logger.debug(
                 "[ManualOverrideManager._mark_manual_control] Manual control of %s expires at %s",
                 entity_id,
@@ -67,7 +67,7 @@ class ManualOverrideManager:
         if not self._enable_detection:
             self._logger.debug("[ManualOverrideManager.handle_state_change] Detection disabled")
             return
-        new_position = new_state.attributes.get("current_position")
+        new_position = new_state.attributes.get("current_position") or 0
         if new_position == target_position:
             self._logger.debug(
                 "[ManualOverrideManager.handle_state_change] New position %s matches expected state for %s",
@@ -76,10 +76,7 @@ class ManualOverrideManager:
             )
             return
 
-        if (
-            self._config.detection_threshold is not None
-            and abs(target_position - new_position) < self._config.detection_threshold
-        ):
+        if abs(target_position - new_position) < (self._config.detection_threshold or 0):
             self._logger.debug(
                 "[ManualOverrideManager.handle_state_change] Position change less than threshold %s for %s",
                 self._config.detection_threshold,

@@ -12,6 +12,20 @@ repos:
           # Format.
           - id: ruff-format
             fail_fast: true
+      - repo: https://github.com/pre-commit/mirrors-mypy
+        rev: v1.18.2
+        hooks:
+          - id: mypy
+            additional_dependencies: [
+              "homeassistant",
+              "pandas",
+              "pandas-stubs",
+              "types-python-dateutil",
+            ]
+            args:
+              - --pretty
+              - --show-error-codes
+              - --show-error-context
       - repo: local
         hooks:
           # Run unit tests.

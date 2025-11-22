@@ -84,7 +84,7 @@ class CoverStateBinarySensorEntity(CoordinatorEntity[AutomatedCoverControlDataUp
         return f"{self._sensor_name}"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         return self.coordinator.data.states.get(self._key, None)
 
     @property

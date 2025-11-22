@@ -63,21 +63,31 @@ BASE_SCHEMA = vol.Schema(
 WINDOW_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_WINDOW_AZIMUTH, default=180): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=0, max=359, mode="slider", unit_of_measurement="°")
+            selector.NumberSelectorConfig(
+                min=0, max=359, mode=selector.NumberSelectorMode.SLIDER, unit_of_measurement="°"
+            )
         ),
         vol.Required(CONF_WINDOW_HEIGHT, default=2.1): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=0.1, max=6, step=0.01, mode="slider", unit_of_measurement="m")
+            selector.NumberSelectorConfig(
+                min=0.1, max=6, step=0.01, mode=selector.NumberSelectorMode.SLIDER, unit_of_measurement="m"
+            )
         ),
         vol.Required(CONF_DISTANCE_FROM_WINDOW, default=0.5): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=0.1, max=2, step=0.1, mode="slider", unit_of_measurement="m")
+            selector.NumberSelectorConfig(
+                min=0.1, max=2, step=0.1, mode=selector.NumberSelectorMode.SLIDER, unit_of_measurement="m"
+            )
         ),
         vol.Optional(CONF_MIN_SOLAR_ELEVATION): vol.All(vol.Coerce(int), vol.Range(min=0, max=90)),
         vol.Optional(CONF_MAX_SOLAR_ELEVATION): vol.All(vol.Coerce(int), vol.Range(min=0, max=90)),
         vol.Optional(CONF_FOV_LEFT, default=90): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=1, max=90, step=1, mode="slider", unit_of_measurement="°")
+            selector.NumberSelectorConfig(
+                min=1, max=90, step=1, mode=selector.NumberSelectorMode.SLIDER, unit_of_measurement="°"
+            )
         ),
         vol.Optional(CONF_FOV_RIGHT, default=90): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=1, max=90, step=1, mode="slider", unit_of_measurement="°")
+            selector.NumberSelectorConfig(
+                min=1, max=90, step=1, mode=selector.NumberSelectorMode.SLIDER, unit_of_measurement="°"
+            )
         ),
         vol.Optional(CONF_BLIND_SPOT_ENABLED, default=False): bool,
     }
@@ -86,10 +96,14 @@ WINDOW_SCHEMA = vol.Schema(
 BLIND_SPOT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_BLIND_SPOT_LEFT, default=0): selector.NumberSelector(
-            selector.NumberSelectorConfig(mode="slider", unit_of_measurement="°", min=0, max=180)
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.SLIDER, unit_of_measurement="°", min=0, max=180
+            )
         ),
         vol.Required(CONF_BLIND_SPOT_RIGHT, default=1): selector.NumberSelector(
-            selector.NumberSelectorConfig(mode="slider", unit_of_measurement="°", min=1, max=180)
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.SLIDER, unit_of_measurement="°", min=1, max=180
+            )
         ),
         vol.Optional(CONF_BLIND_SPOT_ELEVATION): vol.All(vol.Coerce(int), vol.Range(min=0, max=90)),
     }
@@ -100,17 +114,21 @@ COVER_POSITION_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENTITIES, default=[]): selector.EntitySelector(
             selector.EntitySelectorConfig(
                 multiple=True,
-                filter=selector.EntityFilterSelectorConfig(
+                filter=selector.EntitySelectorConfig(
                     domain="cover",
                     supported_features=["cover.CoverEntityFeature.SET_POSITION"],
                 ),
             )
         ),
         vol.Required(CONF_DEFAULT_COVER_POSITION, default=60): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=0, max=100, step=1, mode="slider", unit_of_measurement="%")
+            selector.NumberSelectorConfig(
+                min=0, max=100, step=1, mode=selector.NumberSelectorMode.SLIDER, unit_of_measurement="%"
+            )
         ),
         vol.Optional(CONF_BEFORE_SUNRISE_OR_AFTER_SUNSET_COVER_POSITION): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=0, max=100, step=1, mode="slider", unit_of_measurement="%")
+            selector.NumberSelectorConfig(
+                min=0, max=100, step=1, mode=selector.NumberSelectorMode.SLIDER, unit_of_measurement="%"
+            )
         ),
         vol.Optional(CONF_MAXIMUM_COVER_POSITION): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
         vol.Optional(CONF_ONLY_FORCE_MAXIMUM_WHEN_SUN_IN_FRONT_OF_WINDOW, default=False): bool,
@@ -123,20 +141,18 @@ COVER_POSITION_SCHEMA = vol.Schema(
 SENSOR_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_PRESENCE_ENTITY): selector.EntitySelector(
-            selector.EntityFilterSelectorConfig(domain=["device_tracker", "zone", "binary_sensor", "input_boolean"])
+            selector.EntitySelectorConfig(domain=["device_tracker", "zone", "binary_sensor", "input_boolean"])
         ),
         vol.Optional(CONF_WINDOW_SENSOR_ENTITY): selector.EntitySelector(
-            selector.EntityFilterSelectorConfig(domain=["binary_sensor", "input_boolean"], device_class="window")
+            selector.EntitySelectorConfig(domain=["binary_sensor", "input_boolean"], device_class="window")
         ),
         vol.Optional(CONF_LUX_ENTITY): selector.EntitySelector(
-            selector.EntityFilterSelectorConfig(domain=["sensor"], device_class="illuminance")
+            selector.EntitySelectorConfig(domain=["sensor"], device_class="illuminance")
         ),
         vol.Optional(CONF_LUX_THRESHOLD, default=1000): selector.NumberSelector(
-            selector.NumberSelectorConfig(mode="box", unit_of_measurement="lux")
+            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX, unit_of_measurement="lux")
         ),
-        vol.Optional(CONF_WEATHER_ENTITY): selector.EntitySelector(
-            selector.EntityFilterSelectorConfig(domain="weather")
-        ),
+        vol.Optional(CONF_WEATHER_ENTITY): selector.EntitySelector(selector.EntitySelectorConfig(domain="weather")),
         vol.Optional(CONF_WEATHER_STATE, default=["sunny", "partlycloudy", "cloudy", "clear"]): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 multiple=True,
@@ -177,7 +193,9 @@ AUTOMATION_SCHEMA = vol.Schema(
             selector.EntitySelectorConfig(domain=["sensor", "input_datetime"])
         ),
         vol.Optional(CONF_MINIMUM_CHANGE_PERCENTAGE, default=1): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=1, max=90, step=1, mode="slider", unit_of_measurement="%")
+            selector.NumberSelectorConfig(
+                min=1, max=90, step=1, mode=selector.NumberSelectorMode.SLIDER, unit_of_measurement="%"
+            )
         ),
         vol.Optional(CONF_MINIMUM_CHANGE_TIME, default={"minutes": 2}): selector.DurationSelector(),
         vol.Optional(CONF_RETURN_TO_DEFAULT_AT_END_TIME, default=False): bool,
@@ -360,7 +378,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             if not isinstance(key, vol.schema_builder.Optional):
                 continue
             if key in options and key not in user_input:
-                del options[key]
+                del options[str(key)]
         options.update(user_input)
         return self.async_create_entry(title="", data=options)
 

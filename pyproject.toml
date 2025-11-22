@@ -70,3 +70,7 @@ extend-ignore = [
 "tests/**/*.py" = [
     "S101", # assert
 ]
+
+[[tool.mypy.overrides]]
+module = "astral.*"
+ignore_missing_imports = true

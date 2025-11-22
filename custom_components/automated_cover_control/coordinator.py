@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 
@@ -47,7 +48,7 @@ from .why import CoverControlReason, CoverControlTweaks
 @dataclass
 class CoverStateChangeData:
     entity_id: str
-    new_state: State | None
+    new_state: State
 
 
 @dataclass
@@ -82,20 +83,20 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
 
         self._async_refresh_requests = AutomatedCoverControlDataUpdateCoordinator._AsyncRefreshRequest()
 
-        self._cover_entities_in_motion = {}
+        self._cover_entities_in_motion: dict[str, int] = {}
         self._cover_state_change_data: CoverStateChangeData | None = None
 
-        self._end_time_event_listener = None
+        self._end_time_event_listener: Callable[[], None] | None = None
         self._end_time_last_scheduled = datetime.now(tz=UTC)
 
         self._astral_location, _ = get_astral_location(self.hass)
 
-        self._enable_automation = None
-        self._manual_overrides = ManualOverrideManager(self._logger)
+        self._enable_automation: bool | None = None
+        self._manual_overrides: ManualOverrideManager = ManualOverrideManager(self._logger)
 
-        self._sun_end_time = None
-        self._sun_start_time = None
-        self._next_sun_time_recompute = None
+        self._sun_end_time: datetime | None = None
+        self._sun_start_time: datetime | None = None
+        self._next_sun_time_recompute: datetime | None = None
 
         self._update_config()
 
@@ -119,7 +120,7 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
             start_time = self._automation_config.start_time
         if start_time is None:
             return None
-        start_time = parser.parse(start_time, ignoretz=True).time()
+        start_time = parser.parse(str(start_time), ignoretz=True).time()
         return self._combine_local_time_with_date(datetime.now(tz.UTC), start_time)
 
     def _get_end_time(self) -> datetime | None:
@@ -130,7 +131,7 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
             end_time = self._automation_config.end_time
         if end_time is None:
             return None
-        end_time = parser.parse(end_time, ignoretz=True).time()
+        end_time = parser.parse(str(end_time), ignoretz=True).time()
         end_time = midnight_to_end_of_day(end_time)
         return self._combine_local_time_with_date(datetime.now(tz.UTC), end_time)
 
@@ -145,12 +146,17 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
             self._automation_config.return_to_default_at_end_time,
             self._end_time_last_scheduled,
         )
+        if end_time is None:
+            return
         self._end_time_event_listener = async_track_point_in_utc_time(self.hass, self._async_end_time_trigger, end_time)
         self._end_time_last_scheduled = end_time
 
     async def _async_end_time_trigger(self, event) -> None:
         now = datetime.now(tz=UTC)
         end_time = self._get_end_time()
+        if end_time is None:
+            self._logger.debug("[_async_end_time_trigger] End time is not set!")
+            return
         delta = now - end_time
         self._logger.debug(
             "[_async_end_time_trigger] End time: %s, now: %s, delta: %s",
@@ -159,7 +165,7 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
             delta,
         )
         # One minute because the unit tests tick the clock at minute granularity...
-        if end_time is not None and (delta <= timedelta(minutes=1)):
+        if delta <= timedelta(minutes=1):
             self._async_refresh_requests.end_time = True
             self._logger.debug("[_async_end_time_trigger] End-time refresh triggered")
             await self.async_refresh()
@@ -223,7 +229,7 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
             self._logger.debug("[_async_update_data] automation disabled; exiting")
             return self._generate_data({"reason": CoverControlReason.AUTOMATION_DISABLED})
 
-        calculated_target: SunTrackingVerticalCoverPosition = None
+        calculated_target: SunTrackingVerticalCoverPosition | None = None
         force_set_position: bool = False
 
         # Handle async event-triggered refresh requests first.
@@ -258,10 +264,11 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
         self._manual_overrides.reset_expired_overrides()
 
         # Schedule end-time trigger.
+        maybe_end_time = self._get_end_time()
         if (
-            self._get_end_time()
+            maybe_end_time is not None
             and self._automation_config.return_to_default_at_end_time
-            and self._get_end_time() > self._end_time_last_scheduled
+            and maybe_end_time > self._end_time_last_scheduled
         ):
             self._register_end_time_trigger()
 
@@ -484,9 +491,10 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
                 event.data["entity_id"],
             )  # pragma: no cover
             return  # pragma: no cover
+        new_state = event.data["new_state"] or State("", "")
         in_motion_target = self._cover_entities_in_motion.get(event.data["entity_id"], None)
         if in_motion_target is not None:
-            position = event.data["new_state"].attributes.get("current_position")
+            position = new_state.attributes.get("current_position")
             if position == in_motion_target:
                 del self._cover_entities_in_motion[event.data["entity_id"]]
                 self._logger.debug(
@@ -503,7 +511,7 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
                 )
             # Nothing to do here.
             return
-        if self._manual_overrides.should_ignore_state_change(event.data["new_state"]):
+        if self._manual_overrides.should_ignore_state_change(new_state):
             self._logger.debug(
                 "[async_cover_entity_state_change] Ignoring state change for %s",
                 event.data["entity_id"],
@@ -513,7 +521,7 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
             "[async_cover_entity_state_change] Not expecting cover %s to be in motion",
             event.data["entity_id"],
         )
-        self._cover_state_change_data = CoverStateChangeData(event.data["entity_id"], event.data["new_state"])
+        self._cover_state_change_data = CoverStateChangeData(event.data["entity_id"], new_state)
         self._async_refresh_requests.cover_state_change = True
         await self.async_refresh()
 
