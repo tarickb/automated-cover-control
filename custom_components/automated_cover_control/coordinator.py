@@ -22,7 +22,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.sun import get_astral_location
-from homeassistant.helpers.template import state_attr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import get_time_zone
 
@@ -284,10 +283,18 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
             return self._generate_data({"reason": CoverControlReason.OUTSIDE_CONTROL_TIME_RANGE})
 
         if not calculated_target:
+            sun_obj = self.hass.states.get("sun.sun")
+            azimuth = None
+            elevation = None
+            if sun_obj is None:
+                self._logger.warning("[_async_update_data] sun not found?!")
+            else:
+                azimuth = sun_obj.attributes.get("azimuth")
+                elevation = sun_obj.attributes.get("elevation")
             # Get sun position and calculate cover target.
             sun_pos = SunPosition(
-                solar_azimuth=state_attr(self.hass, "sun.sun", "azimuth"),
-                solar_elevation=state_attr(self.hass, "sun.sun", "elevation"),
+                solar_azimuth=float(str(azimuth)),
+                solar_elevation=float(str(elevation)),
                 sunrise=self._astral_location.sunrise(date.today(), local=False),
                 sunset=self._astral_location.sunset(date.today(), local=False),
             )
@@ -408,8 +415,12 @@ class AutomatedCoverControlDataUpdateCoordinator(DataUpdateCoordinator[Automated
                 ]
             )
 
-        position = state_attr(self.hass, entity, "current_position")
+        entity_obj = self.hass.states.get(entity)
+        if entity_obj is None:
+            self._logger.debug("[_is_already_at_position] Entity %s is None", entity)
+            return False
 
+        position = entity_obj.attributes.get("current_position")
         if position is None:
             self._logger.debug("[_is_already_at_position] No position for cover %s", entity)
             return False
